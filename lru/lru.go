@@ -44,18 +44,17 @@ func (c *LRUCache) Add(key string, value interface{}) (evicted bool) {
 	defer c.Unlock()
 
 	if elm, ok := c.elements[key]; ok {
-		c.list.MoveToFront(elm)
-		return
+		// everytime overwrite the value
+		c.list.Remove(elm)
+	} else {
+		for len(c.elements) >= c.size {
+			lastElm := c.list.Back()
+			c.list.Remove(lastElm)
+			lastEntry := lastElm.Value.(*entry)
+			delete(c.elements, lastEntry.key)
+			evicted = true
+		}
 	}
-
-	for len(c.elements) >= c.size {
-		lastElm := c.list.Back()
-		c.list.Remove(lastElm)
-		lastEntry := lastElm.Value.(*entry)
-		delete(c.elements, lastEntry.key)
-		evicted = true
-	}
-
 	elm := c.list.PushFront(&entry{key, value})
 	c.elements[key] = elm
 	return

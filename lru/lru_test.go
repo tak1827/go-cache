@@ -26,9 +26,9 @@ func TestAddContains(t *testing.T) {
 			evicted: false,
 		},
 		{
-			desc:    "duplicated data",
+			desc:    "overwrite",
 			key:     "key1",
-			value:   "string",
+			value:   "new-string1",
 			evicted: false,
 		},
 		{
@@ -97,6 +97,17 @@ func TestGet(t *testing.T) {
 	_, found = cache.Get(key3)
 	if g, w := found, false; g != w {
 		t.Errorf("expected key3 not found, get: %t, want: %t", g, w)
+	}
+
+	// get struct and overwrite key
+	type Person struct {
+		name string
+	}
+	p := Person{name: "tom"}
+	cache.Add(key4, p)
+	v, _ = cache.Get(key4)
+	if g, w := v.(Person), p; g != w {
+		t.Errorf("unexpected got value, get: %v, want: %v", g, w)
 	}
 }
 
