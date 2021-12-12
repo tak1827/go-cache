@@ -1,2 +1,2 @@
 # go-cache
-Light weight thread safe cache
+Light weight thread safe LRU cache
