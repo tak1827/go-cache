@@ -1,9 +1,6 @@
-# go-cache
-Light weight thread safe LRU cache
+package main
 
-# Getting started
-```go
-import(
+import (
 	"fmt"
 
 	"github.com/tak1827/go-cache/lru"
@@ -32,5 +29,3 @@ func main() {
 		panic("unexpected length")
 	}
 }
-
-```
