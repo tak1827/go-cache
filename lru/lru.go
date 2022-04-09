@@ -36,6 +36,7 @@ func (c *LRUCache) Get(key string) (val interface{}, ok bool) {
 	}
 	en := elm.Value.(*entry)
 	val = en.value
+	c.list.MoveToFront(elm)
 	return
 }
 

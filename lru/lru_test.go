@@ -109,6 +109,18 @@ func TestGet(t *testing.T) {
 	if g, w := v.(Person), p; g != w {
 		t.Errorf("unexpected got value, get: %v, want: %v", g, w)
 	}
+
+	// moved to front
+	elm := cache.list.Back()
+	if g, w := elm.Value.(*entry).key, key2; g != w {
+		t.Errorf("unexpected got value, get: %v, want: %v", g, w)
+	}
+	cache.Get(key2)
+	elm = cache.list.Front()
+	if g, w := elm.Value.(*entry).key, key2; g != w {
+		t.Errorf("unexpected got value, get: %v, want: %v", g, w)
+	}
+
 }
 
 func TestRemoveLenCap(t *testing.T) {
