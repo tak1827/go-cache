@@ -11,7 +11,8 @@ import(
 
 func main() {
 	size := 2
-	cache := lru.NewCache(size)
+	ttl := 60 * 60 // 1h
+	cache := lru.NewCache(size, ttl)
 
 	// add key
 	cache.Add("key1", "value")

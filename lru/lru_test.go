@@ -2,10 +2,11 @@ package lru
 
 import (
 	"testing"
+	"time"
 )
 
 func TestAddContains(t *testing.T) {
-	cache := NewCache(2)
+	cache := NewCache(2, 0)
 
 	tests := []struct {
 		desc    string
@@ -45,14 +46,14 @@ func TestAddContains(t *testing.T) {
 				t.Errorf("unexpected added return, get: %t, want: %t", g, w)
 			}
 			if g, w := cache.Contains(tt.key), true; g != w {
-				t.Errorf("unexpected added return, get: %t, want: %t", g, w)
+				t.Errorf("unexpected contains return, get: %t, want: %t", g, w)
 			}
 		})
 	}
 }
 
 func TestGet(t *testing.T) {
-	cache := NewCache(2)
+	cache := NewCache(2, 0)
 
 	// get string
 	key1 := "key1"
@@ -124,7 +125,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestRemoveLenCap(t *testing.T) {
-	cache := NewCache(2)
+	cache := NewCache(2, 0)
 
 	key1 := "key1"
 	key2 := "key2"
@@ -155,5 +156,51 @@ func TestRemoveLenCap(t *testing.T) {
 	// capacity
 	if g, w := cache.Cap(), 2; g != w {
 		t.Errorf("unexpected capacity, get: %d, want: %d", g, w)
+	}
+}
+
+func TestWithTTL(t *testing.T) {
+	ttl := 2
+	cache := NewCache(2, ttl)
+
+	key1 := "key1"
+	key2 := "key2"
+	value1 := "value1"
+	value2 := "value2"
+	cache.Add(key1, value1)
+	cache.Add(key2, value2)
+
+	time.Sleep(1 * time.Second)
+
+	v, _ := cache.Get(key1)
+	if g, w := v.(string), value1; g != w {
+		t.Errorf("unexpected got value, get: %s, want: %s", g, w)
+	}
+
+	// wait until ttl
+	time.Sleep(2 * time.Second)
+
+	// now key2 is expired, on the other hand key 1 is available
+
+	if g, w := cache.Contains(key2), false; g != w {
+		t.Errorf("unexpected contains return, get: %t, want: %t", g, w)
+	}
+
+	if g, w := cache.Len(), 2; g != w {
+		t.Errorf("unexpected len, get: %d, want: %d", g, w)
+	}
+
+	_, ok := cache.Get(key2)
+	if g, w := ok, false; g != w {
+		t.Errorf("unexpected got value, get: %t, want: %t", g, w)
+	}
+
+	if g, w := cache.Len(), 1; g != w {
+		t.Errorf("unexpected len, get: %d, want: %d", g, w)
+	}
+
+	v, _ = cache.Get(key1)
+	if g, w := v.(string), value1; g != w {
+		t.Errorf("unexpected got value, get: %s, want: %s", g, w)
 	}
 }
