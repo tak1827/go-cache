@@ -1,6 +1,8 @@
 package lru
 
 import (
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -121,7 +123,6 @@ func TestGet(t *testing.T) {
 	if g, w := elm.Value.(*entry).key, key2; g != w {
 		t.Errorf("unexpected got value, get: %v, want: %v", g, w)
 	}
-
 }
 
 func TestRemoveLenCap(t *testing.T) {
@@ -156,6 +157,28 @@ func TestRemoveLenCap(t *testing.T) {
 	// capacity
 	if g, w := cache.Cap(), 2; g != w {
 		t.Errorf("unexpected capacity, get: %d, want: %d", g, w)
+	}
+}
+
+func TestClear(t *testing.T) {
+	cache := NewCache(2, -1)
+
+	for i := 0; i < 3; i++ {
+		cache.Add(fmt.Sprintf("%d", i), i)
+	}
+
+	if g, w := cache.Len(), 2; g != w {
+		t.Errorf("unexpected len, get: %d, want: %d", g, w)
+	}
+
+	cache.Clear()
+
+	if g, w := cache.Len(), 0; g != w {
+		t.Errorf("unexpected len, get: %d, want: %d", g, w)
+	}
+
+	if g, w := cache.list.Len(), 0; g != w {
+		t.Errorf("unexpected len of list, get: %d, want: %d", g, w)
 	}
 }
 
@@ -203,4 +226,43 @@ func TestWithTTL(t *testing.T) {
 	if g, w := v.(string), value1; g != w {
 		t.Errorf("unexpected got value, get: %s, want: %s", g, w)
 	}
+}
+
+func TestEnqueuThredSafe(t *testing.T) {
+	var (
+		pararelCount = 5
+		cache        = NewCache(pararelCount, 2)
+		wg           = &sync.WaitGroup{}
+	)
+
+	// add
+	for i := 0; i < pararelCount; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			k := fmt.Sprintf("%d", index)
+			cache.Add(k, index)
+		}(i)
+	}
+
+	wg.Wait()
+
+	if g, w := cache.Len(), pararelCount; g != w {
+		t.Errorf("got: %d, want: %d", g, w)
+	}
+
+	// get
+	for i := 0; i < pararelCount; i++ {
+		wg.Add(1)
+		go func(index int) {
+			defer wg.Done()
+			k := fmt.Sprintf("%d", index)
+			v, _ := cache.Get(k)
+			if g, w := v.(int), index; g != w {
+				t.Errorf("unexpected got value, get: %d, want: %d", g, w)
+			}
+		}(i)
+	}
+
+	wg.Wait()
 }

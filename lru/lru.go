@@ -120,7 +120,19 @@ func (c *LRUCache) Remove(key string) (present bool) {
 		return
 	}
 	c.list.Remove(elm)
-	delete(c.elements, elm.Value.(*entry).key)
+	delete(c.elements, key)
+	return
+}
+
+func (c *LRUCache) Clear() {
+	c.Lock()
+	defer c.Unlock()
+
+	for k := range c.elements {
+		c.list.Remove(c.elements[k])
+		delete(c.elements, k)
+	}
+
 	return
 }
 
