@@ -2,6 +2,7 @@ package lru
 
 import (
 	"container/list"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -32,6 +33,10 @@ type valueWithTTL struct {
 }
 
 func NewCache(size int, ttl int) LRUCache {
+	if size == 0 {
+		panic(fmt.Sprintf("cache size should be positive"))
+	}
+
 	// just output waring log
 	if 0 < ttl && ttl <= MIN_TTL {
 		log.Printf("too smal ttl setting. recomend to be equal or longer than %d sec\n", MIN_TTL)
